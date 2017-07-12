@@ -37,18 +37,23 @@ namespace AdventDay5
             List<char> zerosList = null;
             mFatalErr = new StringBuilder
                 ("UNEXPECTED ERROR: ");
-            CancellationToken cancelRequested = new CancellationToken(false);
-            
+            CancellationTokenSource source = new CancellationTokenSource();
+            CancellationToken token = source.Token;
+
             try
             {
-                Parallel.For(0, int.MaxValue, increment =>
+                Parallel.For(0, int.MaxValue/3, increment =>
                 {
-                    int digit = 0;
-                    zerosList = new List<char>();
-                    string hash = CreateSerializableHash(increment);
+                    if (Cache.passCode.Count == 8) { source.Cancel(); }
+                    if (token.IsCancellationRequested)
+                        return;
+                        //token.ThrowIfCancellationRequested();
 
+                    string hash = CreateSerializableHash(increment);
                     lock (dummy)
                     {
+                        int digit = 0;
+                        zerosList = new List<char>();
                         while (digit < 5)
                         {
                             if (hash[digit] == '0') { zerosList.Add(hash[digit]); }
@@ -64,6 +69,10 @@ namespace AdventDay5
             }
             catch (Exception ex)
             {
+                if(ex.GetType() == typeof(OperationCanceledException))
+                {
+                    return;
+                }
                 mFatalErr.Append(ex.Message);
                 Console.WriteLine(mFatalErr);
             }
