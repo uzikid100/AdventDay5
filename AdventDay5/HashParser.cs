@@ -92,5 +92,12 @@ namespace AdventDay5
             //specialChars.Add(specChar);
             indexFound.Add(incr, specChar);
         }
+
+        private static void sort()
+        {
+            if(indexFound.Count == 8)
+            {
+            }
+        }
     }
 }
