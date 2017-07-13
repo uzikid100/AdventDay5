@@ -17,17 +17,18 @@ namespace AdventDay5
             adventCode = Console.ReadLine();
 
             HashParser parser = new HashParser(new HashBuilder(adventCode));
-            parser.InParallel();
+            parser.Parse();
             PrintCache();
         }
 
         public static void PrintCache()
         {
-            if(Cache.passCode == null || Cache.passCode.Count == 0)
+            if(Cache.PassCode == null || Cache.PassCode.Count == 0)
                 Console.WriteLine("No special Hashes have been found!");
             else
             {
-                foreach (var element in Cache.passCode)
+                Cache.PassCode.Keys.ToList().Sort();
+                foreach (var element in Cache.PassCode)
                 {
                     Console.Write(element.Value.ToString());
                 }

@@ -11,7 +11,8 @@ namespace AdventDay5
     {
         private HashBuilder mBuilder = null;
         private StringBuilder mFatalErr = null;
-        
+
+        public StringBuilder FatalErr => mFatalErr;
         //raise parsing event.. report parsing status
 
         public HashParser(HashBuilder builder)
@@ -31,50 +32,57 @@ namespace AdventDay5
             return (zerosList.Count == 5);
         }
     
-        public void InParallel()
+        public void Parse()
         {
             object dummy = new object();
             List<char> zerosList = null;
+            int searchRange = 100000;
+            int startingVal = 0;
             mFatalErr = new StringBuilder
                 ("UNEXPECTED ERROR: ");
+
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
 
-            try
+            while (Cache.PassCode.Count < 9)
             {
-                Parallel.For(0, int.MaxValue/3, increment =>
+                try
                 {
-                    if (Cache.passCode.Count == 8) { source.Cancel(); }
-                    if (token.IsCancellationRequested)
-                        return;
-                        //token.ThrowIfCancellationRequested();
-
-                    string hash = CreateSerializableHash(increment);
-                    lock (dummy)
+                    Parallel.For(startingVal, searchRange, increment =>
                     {
-                        int digit = 0;
-                        zerosList = new List<char>();
-                        while (digit < 5)
+                        if (Cache.PassCode.Count == 8) {source.Cancel();}
+                        if (token.IsCancellationRequested)
+                            token.ThrowIfCancellationRequested();
+                        
+                        lock (dummy)
                         {
-                            if (hash[digit] == '0') { zerosList.Add(hash[digit]); }
-                            digit++;
+                            string hash = CreateSerializableHash(increment);
+                            zerosList = new List<char>();
+                            int digit = 0;
+                            while (digit < 5)
+                            {
+                                if (hash[digit] == '0')
+                                    zerosList.Add(hash[digit]);
+                                else return;
+                                digit++;
+                            }
+                            if (isValid(zerosList))
+                                Cache.Save(hash, hash[5], increment);
+                            increment++;
                         }
-                        if (isValid(zerosList))
-                        {
-                            Cache.Save(hash, hash[5], increment);
-                        }
-                        increment++;
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                if(ex.GetType() == typeof(OperationCanceledException))
-                {
-                    return;
+                    });
                 }
-                mFatalErr.Append(ex.Message);
-                Console.WriteLine(mFatalErr);
+                catch (Exception ex)
+                {
+                    if (ex.GetType() == typeof(OperationCanceledException)) { }
+                    else
+                    {
+                        mFatalErr.Append(ex.Message);
+                    }
+                }
+                if (Cache.PassCode.Count == 8) break;
+                startingVal = searchRange;
+                searchRange += 50000;
             }
         }
     }
@@ -82,22 +90,13 @@ namespace AdventDay5
     static class Cache
     {
         private static List<string> specialHashes = new List<string>();
-        //private static List<char> specialChars = new List<char>();
-        private static Dictionary<int, char> indexFound = new Dictionary<int, char>();
-        //public static List<char> passCode => specialChars;
-        public static Dictionary<int, char> passCode => indexFound;
+        private static readonly Dictionary<int, char> IndexFound = new Dictionary<int, char>();
+        public static Dictionary<int, char> PassCode => IndexFound;
+
         public static void Save(string specHash, char specChar, int incr)
         {
             specialHashes.Add(specHash);
-            //specialChars.Add(specChar);
-            indexFound.Add(incr, specChar);
-        }
-
-        private static void sort()
-        {
-            if(indexFound.Count == 8)
-            {
-            }
+            IndexFound.Add(incr, specChar);
         }
     }
 }

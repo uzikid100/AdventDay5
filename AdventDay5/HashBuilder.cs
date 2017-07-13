@@ -10,7 +10,7 @@ namespace AdventDay5
 {
     class HashBuilder
     {
-        private StringBuilder mAdventCode = null;
+        private readonly StringBuilder mAdventCode = null;
         private string hash = null;
         //raise building event...report building status
         public string adventCode => mAdventCode.ToString();
@@ -23,20 +23,13 @@ namespace AdventDay5
         public string Build(int increment)
         {
             StringBuilder tempCode = new StringBuilder(mAdventCode.ToString());
-            //Trap bad hash...
             if(tempCode == null)
             { throw new InvalidOperationException("Cannot build hash from type: NULL"); }
-            else
+
+            string source = tempCode.Append(increment.ToString()).ToString();
+            using (MD5 md5 = MD5.Create())
             {
-                try
-                {
-                    string source = tempCode.Append(increment.ToString()).ToString();
-                    using (MD5 md5 = MD5.Create())
-                    {
-                        hash = GetMd5Hash(md5, source);
-                    }
-                }
-                catch (Exception e) { throw; }
+                hash = GetMd5Hash(md5, source);
             }
             return hash;
         }
@@ -46,9 +39,9 @@ namespace AdventDay5
             byte[] data = md5.ComputeHash(Encoding.UTF8.GetBytes(source));
             StringBuilder builder = new StringBuilder();
 
-            for (int i = 0; i < data.Length; i++)
+            foreach (byte t in data)
             {
-                builder.Append(data[i].ToString("x2"));
+                builder.Append(t.ToString("x2"));
             }
             return builder.ToString();
         }
