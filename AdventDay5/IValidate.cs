@@ -6,14 +6,9 @@ using System.Threading.Tasks;
 
 namespace AdventDay5
 {
-    public interface IValidateHash
+    public interface IValidate
     {
-        bool isValid(string hash);
-    }
-
-    public interface IParser
-    {
-        IEnumerable<char> Parse();
+        bool isValid();
     }
 
 }

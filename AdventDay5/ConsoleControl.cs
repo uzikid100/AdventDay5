@@ -11,30 +11,29 @@ namespace AdventDay5
         private static string adventCode;
 
         //status events here..
-        public static void GetCodeFromUser()
+        public static void Init()
         {
             Console.WriteLine("Enter Advent Code: ");
             adventCode = Console.ReadLine();
 
             HashParser parser = new HashParser(new HashBuilder(adventCode));
             parser.Parse();
-            PrintCache();
         }
 
-        public static void PrintCache()
+
+
+        public static void PrintCache(Dictionary<int, char> code)
         {
-            if(Cache.PassCode == null || Cache.PassCode.Count == 0)
+            StringBuilder sb;
+            if(code == null || code.Count == 0)
                 Console.WriteLine("No special Hashes have been found!");
             else
             {
-                Cache.PassCode.Keys.ToList().Sort();
-                foreach (var element in Cache.PassCode)
-                {
-                    Console.Write(element.Value.ToString());
-                }
-                Console.WriteLine();
+                sb = new StringBuilder("Hash Found! ");
+                foreach (var element in code.OrderBy(i => i.Key))
+                    sb.Append(element.Value.ToString());
+                Console.WriteLine(sb.ToString());
             }
-
         }
     }
 }

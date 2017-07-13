@@ -10,7 +10,7 @@ namespace AdventDay5
     {
         static void Main(string[] args)
         {
-            ConsoleController.GetCodeFromUser();
+            ConsoleController.Init();
         }
     }
 }

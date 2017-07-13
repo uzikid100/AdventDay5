@@ -11,7 +11,8 @@ namespace AdventDay5
     {
         private HashBuilder mBuilder = null;
         private StringBuilder mFatalErr = null;
-
+        private bool printedSimpleValidation = false;
+        private bool printedExtensiveValidation = false;
         public StringBuilder FatalErr => mFatalErr;
         //raise parsing event.. report parsing status
 
@@ -27,11 +28,6 @@ namespace AdventDay5
                     ("Failed to create Serializable Hash");
         }
 
-        private bool isValid(List<char> zerosList)//string hash
-        {
-            return (zerosList.Count == 5);
-        }
-    
         public void Parse()
         {
             object dummy = new object();
@@ -44,31 +40,33 @@ namespace AdventDay5
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
 
-            while (Cache.PassCode.Count < 9)
+            while (!Completed())
             {
                 try
                 {
-                    Parallel.For(startingVal, searchRange, increment =>
+                    Parallel.For(startingVal, searchRange, index =>
                     {
-                        if (Cache.PassCode.Count == 8) {source.Cancel();}
+                        if (Cache.ExtensiveCode.Count == 8) {source.Cancel();}
                         if (token.IsCancellationRequested)
                             token.ThrowIfCancellationRequested();
                         
                         lock (dummy)
                         {
-                            string hash = CreateSerializableHash(increment);
+                            string hash = CreateSerializableHash(index);
                             zerosList = new List<char>();
-                            int digit = 0;
-                            while (digit < 5)
+                            int i = 0;
+                            while (i < 5)
                             {
-                                if (hash[digit] == '0')
-                                    zerosList.Add(hash[digit]);
+                                if (hash[i] == '0')
+                                    zerosList.Add(hash[i]);
                                 else return;
-                                digit++;
+                                i++;
                             }
-                            if (isValid(zerosList))
-                                Cache.Save(hash, hash[5], increment);
-                            increment++;
+                            if (new Validate.SimpleValidate(zerosList).isValid())
+                                Cache.Save(hash, hash[5], index);
+                            if (new Validate.ExtensiveValidate(zerosList, hash[5]).isValid())
+                                Cache.Save(hash, hash[5], hash[6], index);
+                            index++;
                         }
                     });
                 }
@@ -80,23 +78,62 @@ namespace AdventDay5
                         mFatalErr.Append(ex.Message);
                     }
                 }
-                if (Cache.PassCode.Count == 8) break;
+                if (Completed()) break;
                 startingVal = searchRange;
                 searchRange += 50000;
             }
+        }
+
+        private bool Completed()
+        {
+            if (Cache.SimpleCode.Count >= 8)
+            {
+                if (!printedSimpleValidation)
+                {
+                    Cache.Sort();
+                    ConsoleController.PrintCache(Cache.SimpleCode);
+                    printedSimpleValidation = true;
+                }
+            }
+
+            if(Cache.ExtensiveCode.Count == 8 && !printedExtensiveValidation)
+            {
+                Cache.Sort();
+                ConsoleController.PrintCache(Cache.ExtensiveCode);
+                printedExtensiveValidation = true;
+            }
+            return printedExtensiveValidation && printedSimpleValidation ? true : false;
         }
     }
 
     static class Cache
     {
         private static List<string> specialHashes = new List<string>();
-        private static readonly Dictionary<int, char> IndexFound = new Dictionary<int, char>();
-        public static Dictionary<int, char> PassCode => IndexFound;
+        private static Dictionary<int, char> extensiveCode = new Dictionary<int, char>();
+        private static readonly Dictionary<int, char> simpleCode = new Dictionary<int, char>();
 
-        public static void Save(string specHash, char specChar, int incr)
+        public static Dictionary<int, char> SimpleCode => simpleCode;
+        public static Dictionary<int, char> ExtensiveCode => extensiveCode;
+
+
+        public static void Save(string specHash, char specChar, int indexFound)
         {
             specialHashes.Add(specHash);
-            IndexFound.Add(incr, specChar);
+            simpleCode.Add(indexFound, specChar);
         }
+
+        public static void Save(string specHash, char key, char val, int indexFound)
+        {
+            specialHashes.Add(specHash);
+            int num = int.Parse(key.ToString());
+            extensiveCode.Add(num, val);
+        }
+
+        public static void Sort()
+        {
+            extensiveCode.OrderBy(i => i.Key);
+            simpleCode.OrderBy(i => i.Key);
+        }
+
     }
 }
