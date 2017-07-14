@@ -90,7 +90,6 @@ namespace AdventDay5
             {
                 if (!printedSimpleValidation)
                 {
-                    Cache.Sort();
                     ConsoleController.PrintCache(Cache.SimpleCode);
                     printedSimpleValidation = true;
                 }
@@ -98,7 +97,6 @@ namespace AdventDay5
 
             if(Cache.ExtensiveCode.Count == 8 && !printedExtensiveValidation)
             {
-                Cache.Sort();
                 ConsoleController.PrintCache(Cache.ExtensiveCode);
                 printedExtensiveValidation = true;
             }
@@ -109,7 +107,7 @@ namespace AdventDay5
     static class Cache
     {
         private static List<string> specialHashes = new List<string>();
-        private static Dictionary<int, char> extensiveCode = new Dictionary<int, char>();
+        private static readonly Dictionary<int, char> extensiveCode = new Dictionary<int, char>();
         private static readonly Dictionary<int, char> simpleCode = new Dictionary<int, char>();
 
         public static Dictionary<int, char> SimpleCode => simpleCode;
@@ -127,12 +125,6 @@ namespace AdventDay5
             specialHashes.Add(specHash);
             int num = int.Parse(key.ToString());
             extensiveCode.Add(num, val);
-        }
-
-        public static void Sort()
-        {
-            extensiveCode.OrderBy(i => i.Key);
-            simpleCode.OrderBy(i => i.Key);
         }
 
     }

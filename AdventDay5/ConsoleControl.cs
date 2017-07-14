@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,6 @@ namespace AdventDay5
     class ConsoleController
     {
         private static string adventCode;
-
         //status events here..
         public static void Init()
         {
